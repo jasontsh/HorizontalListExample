@@ -11,6 +11,8 @@ import android.widget.TextView
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentStatePagerAdapter
 import androidx.viewpager.widget.ViewPager
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
 
 class MainFragment : Fragment() {
 
@@ -28,37 +30,29 @@ class MainFragment : Fragment() {
             addOnScrollListener(object: RecyclerView.OnScrollListener() {
                 override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                     super.onScrollStateChanged(recyclerView, newState)
-                    val firstView = getChildAt(0)
-                    val idText : TextView = firstView.findViewById(R.id.item_number)
-                    listHeader.text = idText.text
+                    listHeader.text = ((layoutManager as LinearLayoutManager)
+                        .findFirstCompletelyVisibleItemPosition() + 1).toString()
                 }
             })
         }
-        val viewPager : ViewPager = view.findViewById(R.id.viewpager)
-        viewPager.adapter = ScreenSlidePagerAdapter(childFragmentManager)
+        val viewPager : ViewPager2 = view.findViewById(R.id.viewpager)
+        viewPager.adapter = ScreenSlidePagerAdapter(this)
         val viewPagerHeader : TextView = view.findViewById(R.id.viewpager_header)
         viewPagerHeader.text = "1"
-        viewPager.addOnPageChangeListener(object: ViewPager.OnPageChangeListener {
-            override fun onPageScrolled(
-                position: Int,
-                positionOffset: Float,
-                positionOffsetPixels: Int
-            ) = Unit
-
+        viewPager.registerOnPageChangeCallback(object: ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 viewPagerHeader.text = (position + 1).toString()
             }
-
-            override fun onPageScrollStateChanged(state: Int) = Unit
         })
         return view
     }
 
-    private inner class ScreenSlidePagerAdapter(fm: FragmentManager) :
-        FragmentStatePagerAdapter(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
-        override fun getCount(): Int = 50
+    private inner class ScreenSlidePagerAdapter(fa: Fragment) :
+        FragmentStateAdapter(fa) {
 
-        override fun getItem(position: Int): Fragment {
+        override fun getItemCount(): Int = 50
+
+        override fun createFragment(position: Int): Fragment {
             val fragment = ItemFragment()
             val bundle = Bundle()
             bundle.putInt(Constants.FRAGMENT_INDEX, position)
